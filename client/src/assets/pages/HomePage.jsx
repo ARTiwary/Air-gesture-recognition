@@ -1,61 +1,125 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Upload } from "lucide-react";
 import { Link } from "react-router-dom";
+
+const GRAB_COOLDOWN = 10000;
+const USER_ID = "id1";
+const API_URL = "http://localhost:5000";
+const CONFIDENCE_THRESHOLD = 0.7;
 
 const HomePage = ({ currentGesture, gestureConfidence }) => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [isGrabbing, setIsGrabbing] = useState(false);
 
-  const handelImageSelect = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setSelectedImage(file);
-      const reader = new FileReader();
-      reader.onload = () => {
-        setImagePreview(reader.result);
-      };
-      reader.readAsDataURL(file);
+  const lastGrabTime = useRef(0);
+
+  const handleGrab = async () => {
+    if (!selectedImage || isGrabbing) return;
+
+    setIsGrabbing(true);
+
+    const formData = new FormData();
+    formData.append("image", selectedImage);
+    formData.append("userID", USER_ID);
+
+    try {
+      const response = await fetch(`${API_URL}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        lastGrabTime.current = Date.now();
+
+        setTimeout(() => {
+          setIsGrabbing(false);
+        }, 2000);
+      } else {
+        setIsGrabbing(false);
+      }
+    } catch (error) {
+      console.error(error);
+      setIsGrabbing(false);
     }
   };
 
+  useEffect(() => {
+    const timeSinceLastGrab = Date.now() - lastGrabTime.current;
+
+    if (
+      currentGesture === "grab" &&
+      gestureConfidence > CONFIDENCE_THRESHOLD &&
+      selectedImage &&
+      !isGrabbing &&
+      timeSinceLastGrab > GRAB_COOLDOWN
+    ) {
+      handleGrab();
+    }
+  }, [currentGesture, gestureConfidence, selectedImage, isGrabbing]);
+
+  const handleImageSelect = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setSelectedImage(file);
+    lastGrabTime.current = 0;
+
+    const reader = new FileReader();
+    reader.onload = () => setImagePreview(reader.result);
+    reader.readAsDataURL(file);
+  };
+
   return (
-    <div className="min-h-screen bg-linear-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
-      {
-        !imagePreview ? (
-          <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
-            <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
-              Image Transfer
-            </h1>
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex flex-col items-center justify-center p-4">
+      {!imagePreview ? (
+        <div className="bg-white rounded-2xl shadow-2xl p-8 max-w-md w-full">
+          <h1 className="text-3xl font-bold text-gray-800 mb-6 text-center">
+            Image Transfer
+          </h1>
 
-            <p className="text-gray-600 mb-6 text-center ">
-              Select an image, then make a <strong>"GRAB"</strong> gesture
-            </p>
+          <p className="text-gray-600 mb-6 text-center">
+            Select an image, then make a <strong>"GRAB"</strong> gesture
+          </p>
 
-            <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer hover:border-indigo-500 transition-colors bg-indigo-50 hover:bg-indigo-100">
-              <Upload className="w-16 h-1/6 text-indigo-400 mb-4" />
-              <span>Click to select image</span>
+          <label className="flex flex-col items-center justify-center w-full h-64 border-2 border-dashed border-indigo-300 rounded-xl cursor-pointer hover:border-indigo-500 transition-colors bg-indigo-50 hover:bg-indigo-100">
+            <Upload className="w-16 h-1/6 text-indigo-400 mb-4" />
+            <span>Click to select image</span>
 
-              <input
-                type="file"
-                className="hidden"
-                accept="image/*"
-                onChange={handelImageSelect}
-              />
-            </label>
+            <input
+              type="file"
+              className="hidden"
+              accept="image/*"
+              onChange={handleImageSelect}
+            />
+          </label>
 
-            <Link
-              to={"/drop"}
-              className="mt-6 w-fit flex items-center justify-center gap-2 text-gray-600 underline py-2 text-xs rounded-xl transition-colors"
-            >
-              Go to DropPage
-            </Link>
-          </div>
-        ) : (
-          <div className="relative w-full h-screen ">
-            <img src={imagePreview} alt = "Selected image" className="w-full h-full object-contain"/>
-          </div>
-        )
-      }
+          <Link
+            to="/drop"
+            className="mt-6 w-fit flex items-center justify-center gap-2 text-gray-600 underline py-2 text-xs rounded-xl"
+          >
+            Go to DropPage
+          </Link>
+        </div>
+      ) : (
+        <div className="relative w-full h-screen">
+          <img
+            src={imagePreview}
+            alt="Selected"
+            className="w-full h-full object-contain"
+          />
+
+          {isGrabbing && (
+            <div className="absolute inset-0 flex items-center justify-center bg-black bg-opacity-50">
+              <div className="animate-ping absolute w-96 h-96 rounded-full bg-white opacity-75"></div>
+              <div className="animate-pulse absolute w-64 h-64 rounded-full bg-white opacity-75"></div>
+              <div className="animate-bounce absolute w-32 h-32 rounded-full bg-white opacity-75"></div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
