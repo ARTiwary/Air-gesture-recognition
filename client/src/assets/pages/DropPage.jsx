@@ -90,21 +90,23 @@ const DropPage = ({ currentGesture, gestureConfidence }) => {
         </div>
       ) : (
         <div className="relative w-full h-screen">
-          {isDropping && (
+        {
+          isDropping && (
             <div className="absolute inset-0 flex items-center justify-center bg-black z-10">
               <div className="animate-ping absolute w-32 h-32 rounded-full bg-white opacity-75"></div>
               <div className="animate-pulse absolute w-64 h-64 rounded-full bg-white opacity-50"></div>
               <div className="animate-bounce absolute w-96 h-96 rounded-full bg-white"></div>
             </div>
-          )}
+          )
+        }
 
           <img
             src={receivedImage}
             alt="Received"
-            className="w-full h-full object-contain"
-          />
+            className="w-full h-full object-contain" />
         </div>
-      )}
+      )
+    }
     </div>
   );
 };
