@@ -15,7 +15,9 @@ const PORT = 5000;
 
 app.use(cors({
   origin: function (origin, callback) {
-    const allowed = ["http://localhost:5173"];
+    const allowed = [
+      "http://localhost:5173",
+    "https://air-gesture-drop.netlify.app/"];
     if (!origin) return callback(null, true);
     if (allowed.includes(origin)) return callback(null, true);
     return callback(new Error("Not allowed by CORS"));
