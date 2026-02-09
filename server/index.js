@@ -5,14 +5,14 @@ import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
 
-// ------------------ SETUP ------------------
+
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 5000;
 
-// ------------------ MIDDLEWARE ------------------
+
 app.use(cors({
   origin: function (origin, callback) {
     const allowed = ["http://localhost:5173"];
@@ -29,17 +29,17 @@ app.set("trust proxy", 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// ------------------ UPLOADS DIR ------------------
+
 const uploadsDir = path.join(__dirname, "uploads");
 
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
 
-// serve images
+
 app.use("/uploads", express.static(uploadsDir));
 
-// ------------------ IN-MEMORY STORAGE ------------------
+
 const imageCache = new Map();
 
 // simple friend mapping
@@ -67,7 +67,7 @@ const upload = multer({ storage });
 
 // ------------------ ROUTES ------------------
 
-// Upload image
+
 app.post("/upload", upload.single("image"), (req, res) => {
   try {
     if (!req.file) {
@@ -102,7 +102,7 @@ app.post("/upload", upload.single("image"), (req, res) => {
   }
 });
 
-// Drop image for receiver
+
 app.get("/drop/:receiverID", (req, res) => {
   try {
     const receiverID = req.params.receiverID;
@@ -124,7 +124,7 @@ app.get("/drop/:receiverID", (req, res) => {
       });
     }
 
-    // remove from cache after drop
+    
     imageCache.delete(senderID);
 
     res.json({
@@ -141,7 +141,7 @@ app.get("/drop/:receiverID", (req, res) => {
   }
 });
 
-// Health check
+
 app.get("/health", (req, res) => {
   res.json({ status: "OK" });
 });
