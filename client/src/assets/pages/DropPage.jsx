@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { useEffect, useState, useRef } from "react";
 
 const DROP_COOLDOWN = 10000;
-const RECEIVER_ID = "id1";
+const RECEIVER_ID = "id2";
 const API_URL = "http://localhost:5000";
 const CONFIDENCE_THRESHOLD = 0.7;
 
