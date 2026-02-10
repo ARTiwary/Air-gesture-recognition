@@ -1,61 +1,154 @@
-const express = require("express");
-const cors = require("cors");
-const multer = require("multer");
-const path = require("path");
-const fs = require("fs");
+import express from "express";
+import cors from "cors";
+import multer from "multer";
+import path from "path";
+import fs from "fs";
+import { fileURLToPath } from "url";
+
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = process.env.PORT || 5000;
+const PORT = 5000;
 
-/* -------------------- CORS -------------------- */
-app.use(
-  cors({
-    origin: "*", // allow Netlify + mobile browsers
-    methods: ["GET", "POST"],
-  })
-);
 
-/* -------------------- Body parser -------------------- */
+app.use(cors({
+  origin: function (origin, callback) {
+    const allowed = [
+      "http://localhost:5173",
+    "https://air-gesture-drop.netlify.app"];
+    if (!origin) return callback(null, true);
+    if (allowed.includes(origin)) return callback(null, true);
+    return callback(new Error("Not allowed by CORS"));
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE"],
+  allowedHeaders: ["Content-Type"],
+}));
+
+app.set("trust proxy", 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-/* -------------------- Upload folder -------------------- */
-const uploadDir = "uploads";
-if (!fs.existsSync(uploadDir)) {
-  fs.mkdirSync(uploadDir);
+
+const uploadsDir = path.join(__dirname, "uploads");
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
 }
 
-/* -------------------- Multer config -------------------- */
+
+app.use("/uploads", express.static(uploadsDir));
+
+
+const imageCache = new Map();
+
+// simple friend mapping
+const friendsMap = new Map([
+  ["id1", "id2"],
+  ["id2", "id1"],
+]);
+
+// ------------------ MULTER CONFIG ------------------
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, uploadDir);
+    cb(null, uploadsDir);
   },
   filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() + "-" + Math.round(Math.random() * 1e9);
-    cb(null, uniqueName + path.extname(file.originalname));
+    const uniqueString = Math.random().toString(36).substring(7);
+    const timestamp = Date.now();
+    const ext = path.extname(file.originalname);
+    const name = path.basename(file.originalname, ext);
+
+    cb(null, `image-${name}-${timestamp}-${uniqueString}${ext}`);
   },
 });
 
 const upload = multer({ storage });
 
-/* -------------------- Routes -------------------- */
-app.get("/", (req, res) => {
-  res.send("Backend is running ✅");
-});
+// ------------------ ROUTES ------------------
 
-app.post("/upload", upload.single("file"), (req, res) => {
-  if (!req.file) {
-    return res.status(400).json({ message: "No file uploaded" });
+
+app.post("/upload", upload.single("image"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "No file uploaded",
+      });
+    }
+
+    const userID = req.body.userID;
+    if (!userID) {
+      return res.status(400).json({
+        success: false,
+        message: "Missing userID",
+      });
+    }
+
+    const imagePath = `/uploads/${req.file.filename}`;
+    imageCache.set(userID, imagePath);
+
+    res.json({
+      success: true,
+      message: "Image uploaded successfully",
+      imagePath,
+    });
+  } catch (error) {
+    console.error("Upload error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Upload failed",
+    });
   }
-
-  res.status(200).json({
-    message: "File uploaded successfully",
-    file: req.file.filename,
-  });
 });
 
-/* -------------------- Start server -------------------- */
+
+app.get("/drop/:receiverID", (req, res) => {
+  try {
+    const receiverID = req.params.receiverID;
+    const senderID = friendsMap.get(receiverID);
+
+    if (!senderID) {
+      return res.json({
+        success: false,
+        message: "No friend mapping found",
+      });
+    }
+
+    const imagePath = imageCache.get(senderID);
+
+    if (!imagePath) {
+      return res.json({
+        success: false,
+        message: "No image available from your friend",
+      });
+    }
+
+    
+    imageCache.delete(senderID);
+
+    res.json({
+      success: true,
+      imagePath,
+      message: "Image received",
+    });
+  } catch (error) {
+    console.error("Drop error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Drop failed",
+    });
+  }
+});
+
+
+app.get("/health", (req, res) => {
+  res.json({ status: "OK" });
+});
+
+// ------------------ START SERVER ------------------
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log(`Server running on http://localhost:${PORT}`);
 });

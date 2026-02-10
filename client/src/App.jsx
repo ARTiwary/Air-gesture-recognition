@@ -4,6 +4,7 @@ import DropPage from "./assets/pages/DropPage"
 import GestureDetector from "./components/GestureDetector"
 import { useState } from "react"
 
+
 const App = () => {
 
   const [currentGesture, setCurrentGesture] = useState(null);
