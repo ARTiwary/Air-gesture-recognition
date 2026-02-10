@@ -4,7 +4,7 @@ import { useEffect, useState, useRef } from "react";
 
 const DROP_COOLDOWN = 10000;
 const RECEIVER_ID = "id2";
-const API_URL = "http://localhost:5000";
+const API_URL = "https://air-gesture-recognition.onrender.com";
 const CONFIDENCE_THRESHOLD = 0.7;
 
 const DropPage = ({ currentGesture, gestureConfidence }) => {
