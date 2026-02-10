@@ -10,32 +10,33 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 const app = express();
-const PORT = 5000;
+const PORT = process.env.PORT || 5000;
+
 
 
 app.use(cors({
-  origin: function (origin, callback) {
-    const allowed = [
-      "http://localhost:5173",
-    "https://air-gesture-drop.netlify.app"];
-    if (!origin) return callback(null, true);
-    if (allowed.includes(origin)) return callback(null, true);
-    return callback(new Error("Not allowed by CORS"));
-  },
-  credentials: true,
+  origin: [
+    "http://localhost:5173",
+    "https://air-gesture-drop.netlify.app"
+  ],
   methods: ["GET", "POST", "PUT", "DELETE"],
-  allowedHeaders: ["Content-Type"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+  credentials: true
 }));
+
 
 app.set("trust proxy", 1);
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 
-const uploadsDir = path.join(__dirname, "uploads");
+const uploadsDir = process.env.NODE_ENV === "production"
+  ? "/tmp/uploads"
+  : path.join(__dirname, "uploads");
+
 
 if (!fs.existsSync(uploadsDir)) {
-  fs.mkdirSync(uploadsDir);
+  fs.mkdirSync(uploadsDir, {recursive: true});
 }
 
 
