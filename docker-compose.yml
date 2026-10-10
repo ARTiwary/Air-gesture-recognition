@@ -1,0 +1,14 @@
+services:
+  server:
+    build: ./server
+    ports: ["5000:5000"]
+    environment:
+      ALLOWED_ORIGINS: http://localhost:8080
+      FILE_SIGNING_SECRET: ${FILE_SIGNING_SECRET:?set FILE_SIGNING_SECRET, e.g. openssl rand -hex 32}
+  client:
+    build:
+      context: ./client
+      args:
+        VITE_API_URL: http://localhost:5000
+    ports: ["8080:80"]
+    depends_on: [server]

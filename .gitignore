@@ -1,0 +1,8 @@
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
+server/uploads/
+desktop.ini
+.DS_Store

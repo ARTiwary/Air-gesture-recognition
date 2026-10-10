@@ -1,1 +1,23 @@
 @import "tailwindcss";
+
+@theme {
+  --font-sans: "Bricolage Grotesque Variable", ui-sans-serif, system-ui, sans-serif;
+  --color-paper: #f3f6f8;
+  --color-ink: #0f1b2d;
+  --color-mail-blue: #1f4e9e;
+  --color-mail-red: #d8362f;
+}
+
+body { background: var(--color-paper); color: var(--color-ink); font-family: var(--font-sans); }
+
+/* The airmail stripe: frames the stage and fills as a gesture is held. */
+.airmail {
+  background: repeating-linear-gradient(-45deg,
+    var(--color-mail-red) 0 14px, #fff 14px 24px,
+    var(--color-mail-blue) 24px 38px, #fff 38px 48px);
+}
+
+@keyframes arrive { from { transform: translateY(24px) scale(.96); opacity: 0 } to { transform: none; opacity: 1 } }
+.arrive { animation: arrive .45s cubic-bezier(.2,.8,.2,1); }
+
+@media (prefers-reduced-motion: reduce) { *, ::before, ::after { animation: none !important; transition: none !important; } }
