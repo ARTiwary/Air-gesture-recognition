@@ -10,26 +10,27 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/bricolage-grotesque": "^5.2.0",
     "@tailwindcss/vite": "^4.1.18",
     "lucide-react": "^0.563.0",
+    "ml5": "^1.0.1",
+    "qrcode.react": "^4.2.0",
     "react": "^19.2.0",
     "react-dom": "^19.2.0",
     "react-router-dom": "^7.13.0",
-    "tailwindcss": "^4.1.18",
-    "ml5": "^1.0.1",
     "socket.io-client": "^4.8.1",
-    "@fontsource-variable/bricolage-grotesque": "^5.2.0",
-    "qrcode.react": "^4.2.0"
+    "tailwindcss": "^4.1.18"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@types/react": "^19.2.5",
     "@types/react-dom": "^19.2.3",
-    "@vitejs/plugin-react": "^5.1.1",
+    "@vitejs/plugin-react": "^5.2.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
     "globals": "^16.5.0",
-    "vite": "^7.2.4"
+    "patch-package": "^8.0.1",
+    "vite": "^7.3.7"
   }
 }
